@@ -49,10 +49,6 @@ def ballotpedia_search(candidate_name):
 	return None
 
 
-def check_for_email_form(soup):
-	return soup.find('form').find('input', {'type': 'email'}) is not None
-
-
 def add_website_column(candidates):
 	try:
 		candidates['website']
