@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
+import time
 
 """
 the filename should be a saved version of the wikipedia page below:
@@ -99,6 +100,7 @@ def get_all_candidates():
 
 if __name__ == '__main__':
 	candidates = get_all_candidates()
+	candidates.to_csv('all_candidates_info__{}.csv'.format(time.strftime("%Y-%m-%d--%H-%M-%S")))
 	import pdb
 	pdb.set_trace()
 
