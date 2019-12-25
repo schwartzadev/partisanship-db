@@ -4,11 +4,19 @@ import re
 import pandas as pd
 import time
 
-"""
-the filename should be a saved version of the wikipedia page below:
-https://en.wikipedia.org/wiki/2020_United_States_House_of_Representatives_elections
-"""
-filename = "Wikipedia__2020_United_States_House_of_Representatives_elections__12_24_19.html"
+wikipedia_source_url = 'https://en.wikipedia.org/wiki/2020_United_States_House_of_Representatives_elections'
+
+def get_wikipedia_source():
+	response = requests.get(wikipedia_source_url)
+	if response.status_code == 200:
+		return response.content
+	else:
+		print(
+			'FATAL: getting Wikipedia source failed with status code {}...exiting'.format(
+				response.status_code
+				)
+			)
+		quit(99)
 
 
 def get_states(soup):
@@ -76,7 +84,7 @@ def remove_tba_candidates(all_candidates):
 
 def get_all_candidates():
 	soup = BeautifulSoup(
-		open(filename, encoding="utf-8"),
+		get_wikipedia_source(),
 		"html.parser"
 	)	
 
