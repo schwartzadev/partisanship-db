@@ -78,7 +78,6 @@ for index, row in candidates.iterrows():
 			'all_candidates_info_with_websites__{}.csv'.format(index)
 		)
 		print('saved, index:', index)
-		pdb.set_trace()
 
 
 pdb.set_trace()
