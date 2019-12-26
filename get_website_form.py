@@ -1,6 +1,11 @@
 import pandas as pd
 import sys
-import selenium
+from selenium import webdriver
+import math
+
+
+GMAIL_USERNAME = 'testtest'
+WEBDRIVER_PATH = 'C:\\Users\\werdn\\Downloads\\geckodriver-v0.26.0-win64\\geckodriver.exe'
 
 
 def check_arguments():
@@ -25,15 +30,26 @@ def check_arguments():
 	return candidates
 
 
-def check_for_email_form(soup):
-	return soup.find('form').find('input', {'type': 'email'}) is not None
-
-
 candidates = check_arguments()
 
-for index, row in candidates.iterrows():
-	print('running', row['name'], '...')
-	if row['website'] is None: # no website available
-		continue
-	# do checking, registering here
+email_xpath = '//input[@type="email"]'
 
+
+driver = webdriver.Firefox(executable_path=WEBDRIVER_PATH)
+
+for index, row in candidates.iterrows():
+	# print('running', row['name'], '...')
+	if type(row['website']) is float and math.isnan(row['website']): # no website available
+		continue
+	driver.get(row['website'])
+	try:
+		email_fields = driver.find_elements_by_xpath(email_xpath)
+		for field in email_fields:
+			field.send_keys(
+				'{0}+{1}@gmail.com'.format(GMAIL_USERNAME, row['campaign_id'])
+			)
+	except NoSuchElementException as e:
+		print('no email inputs found...')
+	# todo handle operator feedback about successful registration
+	import pdb
+	pdb.set_trace()
