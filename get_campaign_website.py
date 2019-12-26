@@ -59,21 +59,22 @@ def add_website_column(candidates):
 	return candidates
 
 
-candidates = check_arguments()
+if __name__ == '__main__':
+	candidates = check_arguments()
 
-candidates = add_website_column(candidates) # adds a website column if one does not already exist
+	candidates = add_website_column(candidates) # adds a website column if one does not already exist
 
-for index, row in candidates.iterrows():
-	print('running', row['name'], '...')
-	if row['website'] is not '0': # this website has already been ID'd
-		continue
-	website = ballotpedia_search(row['name'])
-	candidates.at[index, 'website'] = website
-	if index % 50 == 0 and index != 0:
-		candidates.to_csv(
-			'all_candidates_info_with_websites__{}.csv'.format(index)
-		)
-		print('saved, index:', index)
+	for index, row in candidates.iterrows():
+		print('running', row['name'], '...')
+		if row['website'] is not '0': # this website has already been ID'd
+			continue
+		website = ballotpedia_search(row['name'])
+		candidates.at[index, 'website'] = website
+		if index % 50 == 0 and index != 0:
+			candidates.to_csv(
+				'all_candidates_info_with_websites__{}.csv'.format(index)
+			)
+			print('saved, index:', index)
 
 
-pdb.set_trace()
+	pdb.set_trace()
