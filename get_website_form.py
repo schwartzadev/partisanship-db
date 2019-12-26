@@ -3,6 +3,7 @@ import sys
 from selenium import webdriver
 import math
 import json
+import time
 
 
 with open('user_info.json') as json_file:
@@ -33,10 +34,10 @@ def check_arguments():
 		quit(99)
 
 	try:
-		candidates['sucessful_registration']
+		candidates['successful_registration']
 	except KeyError as e:
-		print('the specified dataframe does not have a column named "sucessful_registration"...adding one now')
-		candidates.insert(5, 'sucessful_registration', None) # add column
+		print('the specified dataframe does not have a column named "successful_registration"...adding one now')
+		candidates.insert(5, 'successful_registration', None) # add column
 
 	return candidates
 
@@ -56,7 +57,7 @@ driver = webdriver.Firefox(executable_path=WEBDRIVER_PATH)
 for index, row in candidates.tail(30).iterrows():
 	if type(row['website']) is float and math.isnan(row['website']): # no website available
 		continue
-	if row['successful_registration'] == True or row['successful_registration'] == False: # already documented
+	if row['successful_registration'] is not None: # already documented
 		continue
 
 	driver.get(row['website'])
@@ -71,16 +72,22 @@ for index, row in candidates.tail(30).iterrows():
 	print(row['name'], '...')
 	print('    email:', generate_email(row['campaign_id']))
 	# todo copy email to clipboard
-	# todo update dataframe intermittently
 
 	no_response = True
 	while no_response:
 		response = input('successful registration? (y/n) ')
 		if response == 'y':
 			# save and update database
-			candidates.at[index, 'sucessful_registration'] = True
+			candidates.at[index, 'successful_registration'] = True
 			no_response = False
 		if response == 'n':
 			# save and update db
-			candidates.at[index, 'sucessful_registration'] = False
+			candidates.at[index, 'successful_registration'] = False
 			no_response = False
+
+	if index % 10 == 0 and index != 0:
+		# update dataframe to file
+		candidates.to_csv(
+			'all_candidates_info_with_form_responses__{}__{}.csv'.format(index, time.strftime("%Y-%m-%d--%H-%M-%S"))
+		)
+		print('saved, index:', index)
