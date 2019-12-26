@@ -4,6 +4,7 @@ from selenium import webdriver
 import math
 import json
 import time
+import pyperclip
 
 
 with open('user_info.json') as json_file:
@@ -54,24 +55,26 @@ email_xpath = '//input[@type="email"]'
 driver = webdriver.Firefox(executable_path=WEBDRIVER_PATH)
 
 
-for index, row in candidates.tail(30).iterrows():
+for index, row in candidates.iterrows():
 	if type(row['website']) is float and math.isnan(row['website']): # no website available
 		continue
-	if row['successful_registration'] is not None: # already documented
+	if row['successful_registration'] == True or row['successful_registration'] == False: # already documented
 		continue
 
 	driver.get(row['website'])
+	campaign_email = generate_email(row['campaign_id'])
 
 	try:
 		email_fields = driver.find_elements_by_xpath(email_xpath)
 		for field in email_fields:
-			field.send_keys(generate_email(row['campaign_id']))
+			field.send_keys(campaign_email)
 	except NoSuchElementException as e:
 		print('no email inputs found...')
 
 	print(row['name'], '...')
-	print('    email:', generate_email(row['campaign_id']))
-	# todo copy email to clipboard
+	print('    email:', campaign_email)
+
+	pyperclip.copy(campaign_email)
 
 	no_response = True
 	while no_response:
