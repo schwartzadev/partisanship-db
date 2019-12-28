@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException, WebDriverException
 import math
 import json
 import time
@@ -61,7 +62,14 @@ for index, row in candidates.iterrows():
 	if row['successful_registration'] == True or row['successful_registration'] == False: # already documented
 		continue
 
-	driver.get(row['website'])
+	try:
+		driver.get(row['website'])
+	except WebDriverException as e:
+		print("couldn't load page...aborting")
+		print(e)
+		candidates.at[index, 'successful_registration'] = False
+
+
 	campaign_email = generate_email(row['campaign_id'])
 
 	try:
@@ -70,6 +78,8 @@ for index, row in candidates.iterrows():
 			field.send_keys(campaign_email)
 	except NoSuchElementException as e:
 		print('no email inputs found...')
+	except ElementNotInteractableException as e:
+		print('could not interact with found email field...')
 
 	print(row['name'], '...')
 	print('    email:', campaign_email)
