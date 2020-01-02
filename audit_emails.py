@@ -44,15 +44,21 @@ def check_campaign_emails_by_id(connection, campaign_id):
     return len(data[0].split()), data[0].split()
 
 
-def print_email_detail_by_email_id(connection, email_id):
-    typ, msg_data = connection.fetch(email_id, '(RFC822)')
-    for response_part in msg_data:
+def get_email_by_email_id(connection, email_id):
+    typ, message_data = connection.fetch(email_id, '(RFC822)')
+    message = None
+    for response_part in message_data:
         if isinstance(response_part, tuple):
-            msg = email.message_from_bytes(response_part[1])
-            print(msg['subject'], '    ', msg['from'])
-            # payload = msg.get_payload()
+            message = email.message_from_bytes(response_part[1])
+            # print(message['subject'], '    ', message['from'])
+            # payload = message.get_payload()
             # body = extract_body(payload)
             # print(body)
+    return {
+        'typ': typ,
+        'message_data': message_data,
+        'message': message
+    }
 
 
 domain_regex = r"(http[s]?://)?([w]{3}[\.])?([A-z-_0-9]*\.[A-z]{2,4})"
@@ -69,16 +75,30 @@ def clean_website_url(web_url):
         return None
 
 
+def check_if_email_from_domain(email_message, domain_name):
+    return domain_name.lower() in email_message['from'].lower()
+
+
 conn = connect_to_email()
 
 for index, row in candidates.iterrows():
     if row['successful_registration'] == True: # already documented
-        web_domain = clean_website_url(row['website'])
-        print(web_domain)
-        # count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
-        # print(row['name'], '   ', count, 'emails found')
+        count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
+        for eid in email_ids:
+            # print(row['name'], '   ', count, 'emails found')
+            email_content = get_email_by_email_id(conn, eid)
+
+            web_domain = clean_website_url(row['website'])
+            is_from_domain = check_if_email_from_domain(email_content['message'], web_domain)
+            if not is_from_domain: # does the sender match the campaign website?
+                print(
+                    'WARNING: no domain in sender field:',
+                    email_content['message']['from'],
+                    '   domain:',
+                    web_domain
+                )
+
     # todo add checks to confirm the proper campaign id
-    # todo add check based on sender website (does it match the campaign website?)
     # todo add check based on candidate name
         # (is it in the body of each email?, inc. first/last names separately)
 
