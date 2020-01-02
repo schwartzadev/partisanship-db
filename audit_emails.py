@@ -59,6 +59,10 @@ for index, row in candidates.iterrows():
     if row['successful_registration'] == True: # already documented
         count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
         print(row['name'], '   ', count, 'emails found')
+    # todo add checks to confirm the proper campaign id
+    # todo add check based on sender website (does it match the campaign website?)
+    # todo add check based on candidate name
+        # (is it in the body of each email?, inc. first/last names separately)
 
 try:
     conn.close()
