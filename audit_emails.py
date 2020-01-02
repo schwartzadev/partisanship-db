@@ -2,6 +2,8 @@ import imaplib
 import email
 import json
 import pandas as pd
+import re
+import math
 
 import get_campaign_website
 
@@ -53,12 +55,28 @@ def print_email_detail_by_email_id(connection, email_id):
             # print(body)
 
 
+domain_regex = r"(http[s]?://)?([w]{3}[\.])?([A-z-_0-9]*\.[A-z]{2,4})"
+
+
+def clean_website_url(web_url):
+    if isinstance(web_url, float) and math.isnan(web_url):
+        return None
+    match = re.match(domain_regex, web_url)
+    try:
+        return match.groups()[2]
+    except IndexError as e:
+        print('no domain found in', web_url)
+        return None
+
+
 conn = connect_to_email()
 
 for index, row in candidates.iterrows():
     if row['successful_registration'] == True: # already documented
-        count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
-        print(row['name'], '   ', count, 'emails found')
+        web_domain = clean_website_url(row['website'])
+        print(web_domain)
+        # count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
+        # print(row['name'], '   ', count, 'emails found')
     # todo add checks to confirm the proper campaign id
     # todo add check based on sender website (does it match the campaign website?)
     # todo add check based on candidate name
