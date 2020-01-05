@@ -10,7 +10,8 @@ import get_campaign_website
 
 candidates = get_campaign_website.check_arguments()
 
-SINCE_DATE_STRING = '01-Jan-2020'
+SINCE_DATE_STRING = '01-Dec-2019'
+# SINCE_DATE_STRING = '01-Jan-2020'
 
 with open('user_info.json') as json_file:
     data = json.load(json_file)
@@ -75,8 +76,8 @@ def clean_website_url(web_url):
         return None
 
 
-def check_if_email_from_domain(email_message, domain_name):
-    return domain_name.lower() in email_message['from'].lower()
+def check_if_string_from_sender(check_string, email_message):
+    return check_string.lower() in email_message['from'].lower()
 
 
 conn = connect_to_email()
@@ -89,18 +90,24 @@ for index, row in candidates.iterrows():
             email_content = get_email_by_email_id(conn, eid)
 
             web_domain = clean_website_url(row['website'])
-            is_from_domain = check_if_email_from_domain(email_content['message'], web_domain)
+            is_from_domain = check_if_string_from_sender(
+                web_domain,
+                email_content['message']
+            )
+
             if not is_from_domain: # does the sender match the campaign website?
                 print(
-                    'WARNING: no domain in sender field:',
+                    'WARNING: no domain match:',
+                    row['name'],
+                    row['campaign_id'],
                     email_content['message']['from'],
                     '   domain:',
-                    web_domain
+                    web_domain,
+                    'name check:',
+                    [check_if_string_from_sender(n, email_content['message']) for n in row['name'].split()]
                 )
 
     # todo add checks to confirm the proper campaign id
-    # todo add check based on candidate name
-        # (is it in the body of each email?, inc. first/last names separately)
 
 try:
     conn.close()
