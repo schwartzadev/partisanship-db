@@ -80,37 +80,43 @@ def check_if_string_from_sender(check_string, email_message):
     return check_string.lower() in email_message['from'].lower()
 
 
-conn = connect_to_email()
+def check_emails_by_campaign_id():
+    """
+    checks that emails are going to the right email ID
+    intended to confirm that each candidate is registered with their proper email+XXXXX@site.com ID
+    """
+    conn = connect_to_email()
 
-for index, row in candidates.iterrows():
-    if row['successful_registration'] == True: # already documented
-        count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
-        for eid in email_ids:
-            # print(row['name'], '   ', count, 'emails found')
-            email_content = get_email_by_email_id(conn, eid)
+    for index, row in candidates.iterrows():
+        if row['successful_registration'] == True: # already documented
+            count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
+            for eid in email_ids:
+                # print(row['name'], '   ', count, 'emails found')
+                email_content = get_email_by_email_id(conn, eid)
 
-            web_domain = clean_website_url(row['website'])
-            is_from_domain = check_if_string_from_sender(
-                web_domain,
-                email_content['message']
-            )
-
-            if not is_from_domain: # does the sender match the campaign website?
-                print(
-                    'WARNING: no domain match:',
-                    row['name'],
-                    row['campaign_id'],
-                    email_content['message']['from'],
-                    '   domain:',
+                web_domain = clean_website_url(row['website'])
+                is_from_domain = check_if_string_from_sender(
                     web_domain,
-                    'name check:',
-                    [check_if_string_from_sender(n, email_content['message']) for n in row['name'].split()]
+                    email_content['message']
                 )
 
-    # todo add checks to confirm the proper campaign id
+                if not is_from_domain: # does the sender match the campaign website?
+                    print(
+                        'WARNING: no domain match:',
+                        row['name'],
+                        row['campaign_id'],
+                        email_content['message']['from'],
+                        '   domain:',
+                        web_domain,
+                        'name check:',
+                        [check_if_string_from_sender(n, email_content['message']) for n in row['name'].split()]
+                    )
+    try:
+        conn.close()
+    except:
+        pass
+    conn.logout()
 
-try:
-    conn.close()
-except:
-    pass
-conn.logout()
+
+if __name__ == '__main__':
+    check_emails_by_campaign_id()
