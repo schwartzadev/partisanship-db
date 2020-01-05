@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import re
 import math
+import matplotlib.pyplot as plt
 
 import get_campaign_website
 
@@ -118,5 +119,24 @@ def check_emails_by_campaign_id():
     conn.logout()
 
 
+def generate_email_count_histogram():
+    conn = connect_to_email()
+
+    count_list = []
+    for index, row in candidates.iterrows():
+        if row['successful_registration'] == True: # already documented
+            count, email_ids = check_campaign_emails_by_id(conn, row['campaign_id'])
+            count_list.append(count)
+
+    plt.hist(count_list)
+    plt.gca().set(
+        title='Frequency Histogram of Candidate Emails',
+        ylabel='Frequency',
+        xlabel='Number of Emails'
+    )
+    plt.show()
+
+
 if __name__ == '__main__':
-    check_emails_by_campaign_id()
+    # check_emails_by_campaign_id()
+    generate_email_count_histogram()
