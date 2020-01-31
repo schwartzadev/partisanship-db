@@ -5,14 +5,16 @@ import pandas as pd
 import re
 import math
 import matplotlib.pyplot as plt
+import datetime
 
 import get_campaign_website
 
 
 candidates = get_campaign_website.check_arguments()
 
-SINCE_DATE_STRING = '01-Dec-2019'
-# SINCE_DATE_STRING = '01-Jan-2020'
+
+SINCE_DATE = datetime.datetime.strptime('01-01-2020', '%d-%M-%Y')
+
 
 with open('user_info.json') as json_file:
     data = json.load(json_file)
@@ -39,7 +41,7 @@ def check_campaign_emails_by_id(connection, campaign_id):
         None,
         'TO "partisanshipdatabase+{0}@gmail.com" SINCE "{1}"'.format(
             campaign_id,
-            SINCE_DATE_STRING
+            _date_string_from_date(SINCE_DATE)
         )
     )
 
@@ -129,14 +131,58 @@ def generate_email_count_histogram():
             count_list.append(count)
 
     plt.hist(count_list)
+    print(len(count_list), 'campaigns')
+    print(sum([1 for count in count_list if count > 0]), 'campaigns with at least one email')
     plt.gca().set(
         title='Frequency Histogram of Candidate Emails',
         ylabel='Frequency',
         xlabel='Number of Emails'
     )
     plt.show()
+    import pdb
+    pdb.set_trace()
 
+
+def _date_string_from_date(date):
+    return date.strftime('%d-%b-%Y')
+
+
+def get_email_count_by_date(conn, date):
+    start_date = date
+    end_date = date + datetime.timedelta(days=1)
+    query = conn.search(
+        None,
+        '(SINCE "{0}" BEFORE "{1}")'.format(
+            _date_string_from_date(start_date),
+            _date_string_from_date(end_date)
+        )
+    )
+    emails = query[1][0]
+    count = len(emails.split())
+    return count
+
+
+def generate_email_histogram_over_time():
+    conn = connect_to_email()
+
+    day_count = (datetime.datetime.now() - SINCE_DATE).days # the number of days this has been running
+    day_list = [SINCE_DATE + datetime.timedelta(days=i) for i in range(day_count + 1)]
+
+    x = []
+    y = []
+    for day in day_list:
+        x.append(day)
+        y.append(get_email_count_by_date(conn, day))
+    plt.bar(x, y)
+    plt.plot_date(x, y, marker=None)
+    plt.gca().set(
+        title='Frequency of Candidate Emails',
+        ylabel='Count',
+        xlabel='Number of Emails per Day'
+    )
+    plt.show()
 
 if __name__ == '__main__':
     # check_emails_by_campaign_id()
     generate_email_count_histogram()
+    # generate_email_histogram_over_time()
